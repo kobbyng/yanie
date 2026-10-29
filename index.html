@@ -40,7 +40,7 @@
       const end = (drawnLength + length) / totalPathLength;
       path.style.strokeDasharray = length;
       path.style.strokeDashoffset = reduceMotion ? 0 : length;
-0
+
       if (!reduceMotion) {
         strokeAnimations.push(path.animate([
           { offset: 0, strokeDashoffset: length },
