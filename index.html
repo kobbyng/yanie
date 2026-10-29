@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>yanie</title>
+  <link rel="stylesheet" href="yanie.css">
+  <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.26/dist/lenis.css">
+  <link rel="icon" type="image/png" href="yanie-images/yanie.png">
+</head>
+<body class="is-loading">
+  <div class="site-preloader" role="status" aria-label="Loading Yanie">
+    <svg class="site-preloader__logo" viewBox="0 0 500 180" role="img" aria-label="YANIE">
+      <path class="draw-stroke" d="M24 24 C39 38 54 54 72 72 C88 56 104 39 120 22 M72 72 C69 95 64 119 57 145" />
+      <path class="draw-stroke" d="M119 144 C132 111 150 62 166 28 C171 17 176 18 181 31 C195 66 207 109 220 144 M141 98 C164 89 188 87 205 92" />
+      <path class="draw-stroke" d="M237 144 C239 105 242 63 247 27 C249 15 253 18 259 29 C279 65 302 113 319 141 C324 150 329 143 331 131 C337 94 339 56 346 23" />
+      <path class="draw-stroke" d="M367 25 C380 20 394 19 409 22 M392 23 C385 60 373 105 360 143 C375 138 390 132 405 125" />
+      <path class="draw-stroke" d="M443 24 C431 60 415 105 402 143 C423 132 444 122 467 117 M426 78 C443 69 457 65 473 64 M437 41 C452 34 467 30 482 29" />
+    </svg>
+  </div>
+  <script>
+    // Adjust these three values to tune the complete preloader sequence.
+    const PRELOADER_TIMING = { draw: 2200, hold: 350, fade: 600 };
+    const preloader = document.querySelector('.site-preloader');
+    const drawStrokes = [...preloader.querySelectorAll('.draw-stroke')];
+    const totalPathLength = drawStrokes.reduce((total, path) => total + path.getTotalLength(), 0);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let pageLoaded = document.readyState === 'complete';
+    let isExiting = false;
+    const cycleDuration = PRELOADER_TIMING.draw * 2 + PRELOADER_TIMING.hold;
+    const strokeAnimations = [];
+
+    preloader.style.setProperty('--preloader-fade-duration', `${PRELOADER_TIMING.fade}ms`);
+
+    // Share one timeline so the word writes forward and erases in reverse order.
+    let drawnLength = 0;
+    drawStrokes.forEach((path) => {
+      const length = path.getTotalLength();
+      const start = drawnLength / totalPathLength;
+      const end = (drawnLength + length) / totalPathLength;
+      path.style.strokeDasharray = length;
+      path.style.strokeDashoffset = reduceMotion ? 0 : length;
+0
+      if (!reduceMotion) {
+        strokeAnimations.push(path.animate([
+          { offset: 0, strokeDashoffset: length },
+          { offset: start * PRELOADER_TIMING.draw / cycleDuration, strokeDashoffset: length },
+          { offset: end * PRELOADER_TIMING.draw / cycleDuration, strokeDashoffset: 0 },
+          { offset: (PRELOADER_TIMING.draw + PRELOADER_TIMING.hold + (1 - end) * PRELOADER_TIMING.draw) / cycleDuration, strokeDashoffset: 0 },
+          { offset: (PRELOADER_TIMING.draw + PRELOADER_TIMING.hold + (1 - start) * PRELOADER_TIMING.draw) / cycleDuration, strokeDashoffset: length },
+          { offset: 1, strokeDashoffset: length }
+        ], { duration: cycleDuration, iterations: Infinity, easing: 'linear' }));
+      }
+
+      drawnLength += length;
+    });
+
+    function fadePreloader() {
+      window.setTimeout(() => {
+        preloader.classList.add('is-loaded');
+        window.setTimeout(() => {
+          preloader.hidden = true;
+          document.body.classList.remove('is-loading');
+        }, PRELOADER_TIMING.fade);
+      }, PRELOADER_TIMING.hold);
+    }
+
+    // After load, finish the current cycle's write and hold before fading away.
+    function finishPreloader() {
+      if (!pageLoaded || isExiting) return;
+      isExiting = true;
+
+      if (reduceMotion) {
+        fadePreloader();
+        return;
+      }
+
+      const cyclePosition = (strokeAnimations[0].currentTime || 0) % cycleDuration;
+      if (cyclePosition >= PRELOADER_TIMING.draw && cyclePosition <= PRELOADER_TIMING.draw + PRELOADER_TIMING.hold) {
+        strokeAnimations.forEach((animation) => {
+          animation.pause();
+          animation.currentTime = PRELOADER_TIMING.draw;
+        });
+        fadePreloader();
+        return;
+      }
+
+      const timeUntilWritten = cyclePosition < PRELOADER_TIMING.draw
+        ? PRELOADER_TIMING.draw - cyclePosition
+        : cycleDuration - cyclePosition + PRELOADER_TIMING.draw;
+
+      window.setTimeout(() => {
+        strokeAnimations.forEach((animation) => {
+          animation.pause();
+          animation.currentTime = PRELOADER_TIMING.draw;
+        });
+        fadePreloader();
+      }, timeUntilWritten);
+    }
+
+    // Keep looping until every page resource has loaded.
+    window.addEventListener('load', () => {
+      pageLoaded = true;
+      finishPreloader();
+    }, { once: true });
+
+    if (pageLoaded) finishPreloader();
+  </script>
+
+
+  <header>
+    <div class="header">
+        <div class="brand-img">
+          <a class="light-mode-logo" href="yanie.html"><img src="yanie-images/yanie.png" alt="yanie logo" width="200"> </a>
+          <a class="dark-mode-logo" href="yanie.html"><img src="yanie-images/yanie-light-theme-removebg-preview.png" alt="yanie logo" width="200"></a>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="#scents">Scents</a></li>
+            <li><a href="#our-story">Our Story</a></li>
+            <li><a href="#contact">Contact Us</a></li>
+          </ul>
+        </nav>
+        
+
+        <div class="header-cta">
+          <a href="https://wa.me/+2349034056368">Shop Now</a>
+        </div>
+        <div class="light-and-dark-mode-svg">
+          <svg class="light-mode-svg" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#f3f4f6"><path d="M565-395q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Zm-226.5 56.5Q280-397 280-480t58.5-141.5Q397-680 480-680t141.5 58.5Q680-563 680-480t-58.5 141.5Q563-280 480-280t-141.5-58.5ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"/></svg>
+          <svg class="dark-mode-svg" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"/></svg>
+        </div>
+    </div>    
+            <div class="header-hr"></div>
+
+  </header> 
+  <div class="hero-section entry">
+    
+    <div class="headline entry-meta">
+      <p class="headline-p">HANDCRAFTED IN LAGOS . EST .  2024</p>
+      
+        <h1>Make Your Space Smell as <i class="brown">Good</i> as It Looks</h1>
+        <P class="subtext"> 
+            Handcrafted home diffusers made right here in Lagos. Long-lasting scents that instantly 
+            upgrade your home, room, car,  or office.
+        </P>
+        <a href="https://wa.me/+2349034056368" class="shop-now">Order now on WhatsApp</a> </br>
+        <!-- <span><i>Fast Custromer service : 24/7 at your service</i></span> -->
+    </div>
+    <div class="hero-img entry-media">
+      <img src="yanie-images/yanie-hero-img.jpg" alt="hero image" class="lg-screen-hero-img"  >
+      <img src="yanie-images/hero-img-black.jpg" alt="hero image" class="sm-screen-hero-img"  >
+    </div> 
+  </div>  
+
+  <section class="carousel">
+    <div class="product-quality">
+      <div class="design"> <img src="yanie-svg/perfume-2-svgrepo-com.svg" width="50"> <p class="brown">Sleek Design</p></div>
+      <div class="all-day-aroma"><img src="yanie-svg/air_freshener_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown">All Day Aroma</p></div>
+      <div class="pure-oil"><img src="yanie-svg/water-svgrepo-com.svg" width="50"> <p class="brown">100% Pure Oil</p></div>
+      <div class="mood"><img src="yanie-svg/mood_heart_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown">Mood Boosting</p></div>
+      <div class="natural-wax"><img src="yanie-svg/eco_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown"> 100% Natural Wax, No Paraffin </div> 
+    </div>
+    <div class="product-quality" aria-hidden>
+      <div class="design"> <img src="yanie-svg/perfume-2-svgrepo-com.svg" width="50"> <p class="brown">Sleek Design</p></div>
+      <div class="all-day-aroma"><img src="yanie-svg/air_freshener_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown">All Day Aroma</p></div>
+      <div class="pure-oil"><img src="yanie-svg/water-svgrepo-com.svg" width="50"> <p class="brown">100% Pure Oil</p></div>
+      <div class="mood"><img src="yanie-svg/mood_heart_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown">Mood Boosting</p></div>
+      <div class="natural-wax"><img src="yanie-svg/eco_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown"> 100% Natural Wax, No Paraffin </div> 
+    </div>
+  </section>
+  <section class="lg-screen-pq">  
+    <div class="lg-product-quality">
+      <div class="design"> <img src="yanie-svg/perfume-2-svgrepo-com.svg" width="50"> <p class="brown">Sleek Design</p></div>
+      <div class="all-day-aroma"><img src="yanie-svg/air_freshener_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown">All Day Aroma</p></div>
+      <div class="pure-oil"><img src="yanie-svg/water-svgrepo-com.svg" width="50"> <p class="brown">100% Pure Oil</p></div>
+      <div class="mood"><img src="yanie-svg/mood_heart_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown">Mood Boosting</p></div>
+      <div class="natural-wax"><img src="yanie-svg/eco_24dp_C4862E_FILL0_wght400_GRAD0_opsz24.svg" width="50"> <p class="brown"> 100% Natural Wax, No Paraffin </div> 
+    </div>
+  </section>
+  
+  <div class="signature-collection-container entry-scrub"  id="scents" >
+    
+      <section class="trust-strip ">
+        
+        <div class="blend-header entry-scrub-meta">
+          <h3> <img src="yanie-svg/blend-2-svgrepo-com.svg" width="100" class="blend">Blends that tells <i class="brown">a story </i></h3>
+          <p>Each scent is a mood. Each reed, a quiet 
+            ritual. <br>Our  current collection draws from the 
+            spice markets, gardens, and evenings of Lagos.
+          </p>
+        </div>
+      </section>
+      <section class="scents entry-scrub-media">
+         <section class="lavender-and-vanilla">
+            <H5>Lavender & Vanilla</H5>
+            <span>SOFT FLORAL NOTES . VANILLA ORCHID . WARM AMBER</span>
+            <p> A soothing blend of fresh lavender and creamy vanilla, created to 
+              bring a soft, and luxurious scent to your space.
+
+            </p>
+
+            <hr>
+          </section>
+          <section class="oud-and-sandalwood">
+            
+            <h5>Oud & Sandalwood</h5>
+            <span>SANDALWOOD . SOFT CITRUS. AMBER</span>
+            <p>Named for dusk. warm sandalwood and slow-poured amber settle 
+              into a base of Madagascar vanilla. For evenings that deserve attention.
+
+            </p>
+            <hr>
+          </section>
+          <section class="citrus-and-mixed-fruit">
+            
+            <h5>Citrus & Mixed Fruit</h5>
+            <span>LIGHT WOODS . LEMONGRASS . MINT</span>
+            <P>Cool, clean, and grounding. Inspired by traditional herb sellers at 
+              balogun market restorative and quietly powerful.
+            </P>
+        <hr>
+          </section>
+      </section> <!-- signature scents -->
+  </div> <!-- signature collection container -->
+
+  <section class="product-section entry-y-animate">
+     
+    <div class="entry-y-meta">
+      <h3> <img src="yanie-svg/flower-tulip-svgrepo-com.svg" width="30" class="scents-svg">Find Your Perfect Scent</h3>
+      <p class="product-section-subtext">Whether you want calm, fresh, or a little luxurious, we've got a scent for it.
+    </div>
+
+    </p>
+    <div class="products entry-y-media">
+      <div class="reed">
+        <strong>Reed Diffusers</strong>
+          <p>Simple, elegant, and long-lasting, Perfect for bedrooms and living spaces. 
+            
+          </p>
+      </div> <!--  reed closing tag-->
+      <div class="Essential">
+          <strong>Essential Oils</strong>
+          <p>Pure scents you can use to relax, focus, or just enjoy your space more.  </p>
+
+      </div><!-- Essential oils closing tag-->
+      <div class="car-diffuser">
+        <strong>Car Diffusers</strong>
+        <p>Because your car deserves to smell just as  good as your you.</p>
+
+      </div><!--car diffuser closing tag-->
+      <div class="Gift-sets">
+        <strong>Gift Sets</strong>
+        <p>Thoughtful, affordable, and perfect for birthdays or special moments. </p>
+      </div>
+    </div>
+  </section> <!--production section closing tags-->
+  
+  <section class="why-choose-us">
+    <h3>Why people keep Coming back</h3>
+    <div>
+      <ul>
+        <li>
+         ✔ Made with safe, quality ingredient.
+        </li>
+        <li>
+         ✔ Carefully prepared from home with attention to detail. 
+        </li>
+        <li>
+          ✔ Affordable but still feels premium.
+        </li>
+        <li>
+          ✔ Fast delivery anywhere in Lagos.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="the-woman-behind-it entry-scrub">
+    <div class="owner-info entry-scrub-meta">
+      <div class="profile">
+        
+        <img class="light-mode-owner-pic" src="yanie-images/Board.jpg" alt="grace">
+        <img class="dark-mode-owner-pic" src="yanie-images/Group.png" alt="grace">
+
+        
+      </div>
+      
+      <div class="text entry-scrub-media" id="our-story">
+        <h3>Made with <i class="brown">Both hands</i></h3>
+
+        <p>I started Yanie from my kitchen in Abuja, Blending oils and testing
+          reeds on weekends after work. i wanted a scent product that felt 
+          Nigerian, not an imported candle that smells like a vermont winter. <br>
+
+          Every bottle is blended, filled and labelled by hand. i source our 
+          reeds locally and partner with a Lagos based glass supplier.
+          This is a small business, and i'm proud of it.
+
+        </p>
+        <div>
+          <strong>Grace ➖</strong>
+          <span>FOUNDER, YANIE DIFFUSERS</span>
+        </div>
+      </div>
+
+    </div>
+  </section><!--the woman behind it closing tag-->
+
+  <section class="how-it-works">
+    <div class="how-it-works-header">
+      <h6>HOW IT WORKS</h6>
+      <h2>Set up in <i class="brown">minutes</i></h2>
+        <p>No wax, no flame, no fuss. Reed diffusers work quietly releasing fragrance
+          through natural evaporation, hour after hour.
+        </p>
+    </div>
+    <div class="how-it-works-steps">
+      <div class="one-and-two">
+        <div class="unbox">
+          <span>01</span>
+          <strong>Unbox</strong>
+          <p>Your Yanie set arrives wrapped, bottled, with 
+            reeds, and care card. </p>
+        </div><!--unbox closing tag-->
+        <div class="fill-and-place">
+          <span>02</span>
+          <strong>Fill & Place</strong>
+          <p>Pour the oil into the bottle, insert the reeds, and place it in your favorite spot. </p>
+        </div>
+      </div><!--one and two closing tag-->
+      <div class="three-and-four">
+        <div class="Insert-reeds">
+          <span>03</span>
+          <strong>Insert Reeds</strong>
+          <p>Place all reeds in. Flip them after 24 hours for a stronger first scent.
+             </p>
+        </div><!--insert reeds closing tag-->
+        <div class="enjoy">
+          <span>04</span>
+          <strong>Enjoy</strong>
+          <p>One bottle lasts 6-8 weeks depending on usage.</p>
+        </div><!--enjoy closing tag-->
+      </div><!--three and four closing tag-->
+    </div><!--product closing tag-->
+  </section>
+  <section class="featured-products-container">
+    <h1>Featured Products</h1>
+    <div class="featured-products entry-scrub products-container">
+    
+
+      
+    </div>
+  </section>
+  <section class="final-cta entry-y-animate">
+      <div class="cta-image entry-y-meta">
+        <img src="yanie-images/sm-screen-cta.png" width="100" class="sm-screen-cta-img">
+        <img src="yanie-images/lg-screen-cta.png"  class="lg-screen-cta-img">
+      </div>
+      <div class="final-cta-text entry-y-media">
+          <h2>Ready to transform your space?</h2>
+          <p>   Order your handcrafted Yanie diffuser today and experience the difference. 
+                Fast delivery across Lagos and a scent for every mood.
+        </p>
+        <a href="https://wa.me/+2349034056368" class="shop-now">Order now on Whatsapp</a>
+      </div> 
+  </section>
+ 
+
+
+  <div class="footer-container">
+    <footer>
+      <div class="footer-brand">
+        <h2>Connect with us </h2>
+        <p>1A Tobiloba Lawal, Ocean breeze Estate Ologolo, Lagos. <br> +234 903 405 6368 <br>
+        </p>
+        <div class="socials">
+          <a href="https://www.instagram.com/yanie_homes?igsh=MTZiZ2I4czd6ZjUxaQ=="><img src="yanie-svg/instagram-svgrepo-com.svg" alt="instagram" width="19"></a>
+          <!-- <a href="#"><img src="yanie-svg/facebook-svgrepo-com.svg" alt="facebook" width="19"></a> -->
+          <a href="https://wa.me/+2349034056368"><img src="yanie-svg/whatsapp-svgrepo-com (1).svg" alt="whatsapp" width="20"></a>
+          <a href="https://www.tiktok.com/@yanie_homes?_r=1&_t=ZS-98nXkcXnICS"><img src="yanie-svg/tiktok-svgrepo-com.svg" alt="tiktok" width="20"></a>
+        </div>
+      </div>
+      
+
+    </footer>
+          <div class="year"></div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/lenis@1.3.26/dist/lenis.min.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
+<script src="product.js"></script>
+<script src="yanie.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+</script>
+
+<script>
+
+
+  // lenis smooth scrolling  
+
+// Initialize a new Lenis instance for smooth scrolling
+const lenis = new Lenis();
+
+// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin
+lenis.on('scroll', ScrollTrigger.update);
+
+// Add Lenis's requestAnimationFrame (raf) method to GSAP's ticker
+// This ensures Lenis's smooth scroll animation updates on each GSAP tick
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000); // Convert time from seconds to milliseconds
+});
+
+// Disable lag smoothing in GSAP to prevent any delay in scroll animations
+gsap.ticker.lagSmoothing(0);
+
+const entries = document.querySelectorAll('.entry');
+
+entries.forEach(entry => {
+  let entryMeta = entry.querySelector('.entry-meta');
+  let entryMedia = entry.querySelector('.entry-media');
+
+  gsap.set(entryMeta, {xPercent: -100, opacity:0});
+  gsap.set(entryMedia, {xPercent: 100, opacity:0});
+
+  gsap.to(entryMeta, {
+    scrollTrigger: {
+      trigger: entry,
+      start:'top bottom',
+      end: 'top  60%',
+      toggleActions: 'play none none reverse'
+    },
+    xPercent: 0,
+    opacity:1
+  })
+  gsap.to(entryMedia, {
+
+    scrollTrigger: {
+      trigger: entry,
+      start:'top bottom',
+      end: 'top  80%',
+      toggleActions: 'play none none reverse'
+    },
+    xPercent: 0,
+    opacity:1,
+    zIndex:-100
+})
+});
+
+
+const entryScrub = document.querySelectorAll('.entry-scrub');
+
+
+entryScrub.forEach(entry => {
+  let entryMeta = entry.querySelector('.entry-scrub-meta');
+  let entryMedia = entry.querySelector('.entry-scrub-media');
+
+  gsap.set(entryMeta, { xPercent: -100, opacity: 0 });
+  gsap.set(entryMedia, { xPercent: 100, opacity: 0 });
+
+  gsap.to(entryMeta, {
+    scrollTrigger: {
+      trigger: entry,
+      start: 'top 80%',
+      end: 'top 60%',
+      toggleActions: 'play none none reverse'
+    },
+    xPercent: 0,
+    opacity: 1
+  });
+
+  gsap.to(entryMedia, {
+    scrollTrigger: {
+      trigger: entry,
+      start: 'top 70%',
+      end: 'top 60%',
+      toggleActions: 'play none none reverse'
+    },
+    xPercent: 0,
+    opacity: 1
+  });
+});
+
+const entryY = document.querySelectorAll('.entry-y-animate');
+
+entryY.forEach(entry => {
+    
+  let entryMeta = entry.querySelector('.entry-y-meta');
+  let entryMedia = entry.querySelector('.entry-y-media'); 
+
+  gsap.set(entryMeta, {yPercent: 100, opacity: 0});
+  gsap.set(entryMedia, {yPercent:100, opacity: 0});
+ 
+  gsap.to(entryMeta, {
+    scrollTrigger: {
+      trigger:entry,
+      start: 'top 80%',
+      end: 'top 60%',
+      toggleActions: 'play none none reverse'
+    }, 
+    yPercent: 0,
+    opacity: 1
+  });
+
+    gsap.to(entryMedia, {
+    scrollTrigger: {
+      trigger:entry,
+      start: 'top 50%',
+      end: 'top 60%',
+      toggleActions: 'play none none reverse'
+    }, 
+    yPercent: 0,
+    opacity: 1
+  });
+
+})
+
+
+</script>
+</body>
+</html>
